@@ -30,6 +30,12 @@
   }
   .hidden { display: none; }
   .progress { color: var(--muted); font-size: 0.8rem; margin-bottom: 1rem; }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .progress-row .progress { margin-bottom: 0; }
+  select {
+    background: #0f172a; border: 1px solid #334155; color: var(--muted);
+    border-radius: 0.4rem; padding: 0.25rem 0.5rem; font-size: 0.8rem;
+  }
   .adjective { font-size: 1.6rem; font-weight: 700; }
   .gloss { color: var(--muted); font-size: 0.9rem; margin: 0.3rem 0 1.2rem; }
   .sentence { font-size: 1.15rem; margin-bottom: 1rem; }
@@ -71,7 +77,16 @@
 
   <!-- MODE 1: adjective + preposition -->
   <div id="mode-adj" class="card">
-    <div class="progress" id="adj-progress"></div>
+    <div class="progress-row">
+      <div class="progress" id="adj-progress"></div>
+      <label style="color:var(--muted);font-size:0.8rem">velocidad
+        <select id="speed">
+          <option value="fast">rápida</option>
+          <option value="normal" selected>normal</option>
+          <option value="slow">lenta</option>
+        </select>
+      </label>
+    </div>
     <div class="adjective" id="adj-word"></div>
     <div class="gloss" id="adj-gloss"></div>
     <div class="sentence" id="adj-sentence"></div>
@@ -170,7 +185,14 @@ const TEXTS = [
 
 /* ================= ADJECTIVE MODE ================= */
 
-let deck = [], adjIndex = 0, adjScore = 0, adjAnswered = 0;
+let deck = [], adjIndex = 0, adjScore = 0, adjAnswered = 0, locked = false;
+
+// delays [acierto, fallo] en ms por velocidad
+const SPEEDS = {
+  fast:   [250, 1200],
+  normal: [700, 1800],
+  slow:   [1300, 3000]
+};
 
 function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
@@ -191,6 +213,7 @@ function startAdj() {
 function nextAdj() {
   const fb = document.getElementById('adj-feedback');
   fb.textContent = ''; fb.className = 'feedback';
+  locked = false;
   const inp = document.getElementById('adj-input');
   inp.value = ''; inp.className = 'prep-input'; inp.focus();
 
@@ -218,18 +241,23 @@ function checkAdj() {
   const inp = document.getElementById('adj-input');
   const fb = document.getElementById('adj-feedback');
   const guess = norm(inp.value);
-  if (!guess) return;
+  if (!guess || locked) return;
+  locked = true;
   adjAnswered++;
+  const [okMs, errMs] = SPEEDS[document.getElementById('speed').value];
+  let delay;
   if (valids.includes(guess)) {
     adjScore++;
     inp.classList.add('good');
     fb.textContent = `✓ "${adj} ${valids[0]}"`; fb.className = 'feedback ok';
+    delay = okMs;
   } else {
     inp.classList.add('bad');
     fb.textContent = `✗ Era "${valids.join('" o "')}" → ${adj} ${valids[0]}`; fb.className = 'feedback err';
+    delay = errMs;
   }
   adjIndex++;
-  setTimeout(nextAdj, 900);
+  setTimeout(nextAdj, delay);
 }
 
 function skipAdj() {
