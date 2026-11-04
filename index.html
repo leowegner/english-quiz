@@ -172,7 +172,7 @@ const ADJ = [
 const TEXTS = [
   {
     title: "1 · A Strange Night",
-    html: `Last Saturday I {1|went} (go) to the cinema with my friends. We {2|watched} (watch) a horror film and honestly, it {3|was} (be) terrifying. While we {4|were walking} (walk) home, it suddenly {5|started} (start) to rain. We {6|didn't have} (not have) an umbrella, so we {7|ran} (run) to the nearest bus stop. When the bus {8|arrived} (arrive), we {9|got} (get) on and {10|sat} (sit) down, completely wet.`
+    html: `Last Saturday I {1|went} (go) to the cinema with my friends. We {2|had bought} (buy) the tickets online the day before, so we {3|didn't have} (not have) to queue. The film {4|was} (be) terrifying and while we {5|were watching} (watch) it, my friend Lucas {6|was eating} (eat) popcorn non-stop. When the film {7|finished} (finish), it {8|was raining} (rain) outside. We {9|didn't have} (not have) an umbrella, so we {10|ran} (run) to the nearest bus stop.`
   },
   {
     title: "2 · The Lost Keys",
@@ -205,6 +205,18 @@ function shuffle(a) {
 }
 
 function norm(s) { return s.trim().toLowerCase(); }
+
+// canonicaliza: minúsculas, sin espacios extra y contracciones expandidas
+// (didn't = did not, hadn't = had not, wasn't = was not, 'd = had, 've = have)
+function canon(s) {
+  return norm(s)
+    .replace(/can[’']t\b/g, "can not")
+    .replace(/won[’']t\b/g, "will not")
+    .replace(/(\w)n[’']t\b/g, "$1 not")
+    .replace(/(\w)[’']ve\b/g, "$1 have")
+    .replace(/(\w)[’']d\b/g, "$1 had")
+    .replace(/\s+/g, ' ');
+}
 
 function startAdj() {
   deck = shuffle([...ADJ]);
@@ -291,7 +303,7 @@ function openText(i) {
   gaps = [];
   let id = 0;
   const body = TEXTS[i].html.replace(/\{(\d+)\|([^}]+)\}/g, (m, n, ans) => {
-    gaps.push(ans.split('|').map(s => s.toLowerCase()));
+    gaps.push(ans.split('|').map(canon));
     return `<input type="text" class="gap-input" data-gap="${id++}" autocomplete="off" autocapitalize="off" spellcheck="false">`;
   });
   document.getElementById('past-body').innerHTML = body;
@@ -305,7 +317,7 @@ function checkText() {
   let ok = 0, filled = 0;
   document.querySelectorAll('.gap-input').forEach(inp => {
     const valid = gaps[+inp.dataset.gap];
-    const guess = norm(inp.value);
+    const guess = canon(inp.value);
     inp.classList.remove('good', 'bad');
     if (!guess) return;
     filled++;
