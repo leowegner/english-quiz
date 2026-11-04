@@ -81,8 +81,9 @@
       <div class="progress" id="adj-progress"></div>
       <label style="color:var(--muted);font-size:0.8rem">velocidad
         <select id="speed">
+          <option value="instant" selected>instantánea</option>
           <option value="fast">rápida</option>
-          <option value="normal" selected>normal</option>
+          <option value="normal">normal</option>
           <option value="slow">lenta</option>
         </select>
       </label>
@@ -189,6 +190,7 @@ let deck = [], adjIndex = 0, adjScore = 0, adjAnswered = 0, locked = false;
 
 // delays [acierto, fallo] en ms por velocidad
 const SPEEDS = {
+  instant:[0, 900],
   fast:   [250, 1200],
   normal: [700, 1800],
   slow:   [1300, 3000]
